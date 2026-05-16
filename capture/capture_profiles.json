@@ -1,0 +1,13 @@
+{
+  "skill_bar": {
+    "mode": "relative",
+    "window_title": "洛克王国：世界  ",
+    "window_exe": "NRC-Win64-Shipping.exe",
+    "region": {
+      "x": 85,
+      "y": 185,
+      "width": 345,
+      "height": 495
+    }
+  }
+}

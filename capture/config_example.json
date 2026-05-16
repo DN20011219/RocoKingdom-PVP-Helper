@@ -1,0 +1,11 @@
+{
+  "mode": "relative",
+  "window_title": null,
+  "window_exe": "NRC-Win64-Shipping.exe",
+  "region": {
+    "x": 100,
+    "y": 200,
+    "width": 300,
+    "height": 120
+  }
+}
