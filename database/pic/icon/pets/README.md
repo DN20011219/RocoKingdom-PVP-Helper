@@ -4,6 +4,8 @@
 
 该数据源主要用于以视觉模式匹配出场宠物。
 
+可使用 `database\pic\icon\download_icons.py --target pets` 批量下载到当前目录。
+
 ```json
 [
   {

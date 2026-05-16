@@ -4,6 +4,8 @@
 
 该数据源主要用于以视觉模式匹配使用的技能。
 
+可使用 `database\pic\icon\download_icons.py --target skills` 批量下载到当前目录。
+
 ```json
 [
   {
@@ -22,13 +24,14 @@
       }
     ],
     "wikitext_title": "迪莫",
-    "html_path": "data\\pets_html\\迪莫.html",
+    "html_path": "data\pets_html\迪莫.html",
     "skills": [
       {
         "category": "精灵技能",
         "name": "猛烈撞击",
         "icon_title": "猛烈撞击",
         "icon_href": "/rocom/%E7%8C%9B%E7%83%88%E6%92%9E%E5%87%BB",
+        "icon_src": "https://patchwiki.biligame.com/images/rocom/e/eb/cfuyfb8bey4c7scjjg2v9amspxmdldo.png",
         "attribute": "普通",
         "level": "LV1 ",
         "power": "1",
@@ -43,7 +46,7 @@
 ]
 ```
 
-示例数据如上，其中 `icon_href` 字段为技能图标地址，下载的技能图标文件以 "技能名（`name`字段）.png" 命名。
+示例数据如上，其中 `icon_src` 字段为技能图标地址，`icon_href` 是技能页面链接。下载的技能图标文件以 "技能名（`name`字段）.png" 命名。
 
 在下载技能图标时，需要注意，每个技能（以技能名称为准）是唯一的，所以只需要下载一份图标文件。
 

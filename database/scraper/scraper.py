@@ -146,10 +146,12 @@ def parse_skill_block(block_html, tab_title):
 
     icon_title = ""
     icon_href = ""
-    # anchor href may not always have title attribute; accept optional title
-    icon_match = re.search(r'(?is)<a[^>]+href="([^"]+)"(?:[^>]*title="([^"]*)")?', block_html)
+    icon_src = ""
+    # anchor href is the skill page, while img src is the actual icon asset
+    icon_match = re.search(r'(?is)<a[^>]+href="([^"]+)"(?:[^>]*title="([^"]*)")?.*?<img[^>]+src="([^"]+)"', block_html)
     if icon_match:
         icon_href = icon_match.group(1)
+        icon_src = icon_match.group(3)
         if icon_match.group(2):
             icon_title = html_module.unescape(icon_match.group(2)).strip()
         else:
@@ -205,6 +207,7 @@ def parse_skill_block(block_html, tab_title):
         "name": name,
         "icon_title": icon_title,
         "icon_href": icon_href,
+        "icon_src": icon_src,
         "attribute": attribute,
         "level": level,
         "power": power,
