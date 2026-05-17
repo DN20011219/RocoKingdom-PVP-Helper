@@ -55,11 +55,32 @@ def create_schema(conn: sqlite3.Connection):
         data TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS teams (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE,
+        resonance_magic TEXT,
+        source_text TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS team_members (
+        id INTEGER PRIMARY KEY,
+        team_id INTEGER,
+        pet_name TEXT,
+        bloodline TEXT,
+        skills TEXT,
+        stats TEXT,
+        member_index INTEGER,
+        UNIQUE(team_id, pet_name)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
     CREATE INDEX IF NOT EXISTS idx_pets_wikitext ON pets(wikitext_title);
     CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name);
     CREATE INDEX IF NOT EXISTS idx_pet_skills_pet ON pet_skills(pet_id);
     CREATE INDEX IF NOT EXISTS idx_pet_skills_skill ON pet_skills(skill_id);
+    CREATE INDEX IF NOT EXISTS idx_teams_name ON teams(name);
+    CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id);
+    CREATE INDEX IF NOT EXISTS idx_team_members_pet ON team_members(pet_name);
     """
     )
     conn.commit()
@@ -127,6 +148,107 @@ def upsert_counter(conn: sqlite3.Connection, name: str, data: dict):
     cur = conn.cursor()
     cur.execute("DELETE FROM counters WHERE name = ?", (name,))
     cur.execute("INSERT INTO counters (name, data) VALUES (?, ?)", (name, json.dumps(data, ensure_ascii=False)))
+
+
+def upsert_team(conn: sqlite3.Connection, name: str, resonance_magic: str, source_text: str | None = None) -> int:
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM teams WHERE name = ? LIMIT 1", (name,))
+    row = cur.fetchone()
+    if row:
+        team_id = row["id"]
+        cur.execute(
+            "UPDATE teams SET resonance_magic = ?, source_text = ? WHERE id = ?",
+            (resonance_magic, source_text, team_id),
+        )
+        return team_id
+    cur.execute(
+        "INSERT INTO teams (name, resonance_magic, source_text) VALUES (?, ?, ?)",
+        (name, resonance_magic, source_text),
+    )
+    return cur.lastrowid
+
+
+def replace_team_members(conn: sqlite3.Connection, team_id: int, members: list[dict]):
+    cur = conn.cursor()
+    cur.execute("DELETE FROM team_members WHERE team_id = ?", (team_id,))
+    for index, member in enumerate(members):
+        cur.execute(
+            "INSERT INTO team_members (team_id, pet_name, bloodline, skills, stats, member_index) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                team_id,
+                member.get("pet_name"),
+                member.get("bloodline"),
+                json.dumps(member.get("skills", []), ensure_ascii=False),
+                json.dumps(member.get("stats"), ensure_ascii=False) if member.get("stats") is not None else None,
+                member.get("member_index", index),
+            ),
+        )
+
+
+def get_team_by_name(conn: sqlite3.Connection, name: str):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM teams WHERE name = ? LIMIT 1", (name,))
+    team = cur.fetchone()
+    if not team:
+        return None
+
+    cur.execute(
+        "SELECT * FROM team_members WHERE team_id = ? ORDER BY member_index, id",
+        (team["id"],),
+    )
+    members = []
+    for row in cur.fetchall():
+        members.append(
+            {
+                "pet_name": row["pet_name"],
+                "bloodline": row["bloodline"],
+                "skills": json.loads(row["skills"]) if row["skills"] else [],
+                "stats": json.loads(row["stats"]) if row["stats"] else None,
+                "member_index": row["member_index"],
+            }
+        )
+
+    return {
+        "name": team["name"],
+        "resonance_magic": team["resonance_magic"],
+        "source_text": team["source_text"],
+        "members": members,
+    }
+
+
+def list_teams(conn: sqlite3.Connection):
+    cur = conn.cursor()
+    cur.execute("SELECT name, resonance_magic FROM teams ORDER BY id")
+    return [{"name": row["name"], "resonance_magic": row["resonance_magic"]} for row in cur.fetchall()]
+
+
+def set_team_member_stats(conn: sqlite3.Connection, team_name: str, pet_name: str, stats: dict):
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM teams WHERE name = ? LIMIT 1", (team_name,))
+    team = cur.fetchone()
+    if not team:
+        return None
+    cur.execute(
+        "SELECT * FROM team_members WHERE team_id = ? AND pet_name = ? LIMIT 1",
+        (team["id"], pet_name),
+    )
+    member = cur.fetchone()
+    if not member:
+        return None
+
+    cur.execute(
+        "UPDATE team_members SET stats = ? WHERE id = ?",
+        (json.dumps(stats, ensure_ascii=False), member["id"]),
+    )
+    cur.execute("SELECT * FROM team_members WHERE id = ? LIMIT 1", (member["id"],))
+    updated = cur.fetchone()
+    return {
+        "pet_name": updated["pet_name"],
+        "bloodline": updated["bloodline"],
+        "skills": json.loads(updated["skills"]) if updated["skills"] else [],
+        "stats": json.loads(updated["stats"]) if updated["stats"] else None,
+        "member_index": updated["member_index"],
+    }
 
 
 def count_rows(conn: sqlite3.Connection):

@@ -357,6 +357,14 @@ def group_skills_by_category(skills):
     return pools
 
 
+def pet_page_key(pet):
+    link = pet.get("link", "") or ""
+    if link:
+        return ("link", link)
+    title = pet.get("wikitext_title") or (unquote(link.rstrip("/").split("/")[-1]) if link else "")
+    return ("title", title, pet.get("name", ""))
+
+
 def download_and_parse_pet_page(pet, html_dir):
     link = pet.get("link", "")
     title = unquote(link.rstrip("/").split("/")[-1]) if link else ""
@@ -1073,15 +1081,27 @@ def cmd_pet_detail(args):
             detailed = []
 
     completed_keys = set()
+    page_cache = {}
     for pet in detailed:
-        completed_keys.add((pet.get("name", ""), pet.get("wikitext_title", "")))
+        completed_keys.add((pet.get("name", ""), pet.get("link", "")))
+        page_cache.setdefault(
+            pet_page_key(pet),
+            {
+                "html_path": pet.get("html_path", ""),
+                "skills": pet.get("skills", []),
+                "skill_pools": pet.get("skill_pools", []),
+                "qualification": pet.get("qualification", {}),
+                "characteristic": pet.get("characteristic", {}),
+                "error": pet.get("error", ""),
+            },
+        )
 
     if detailed:
         print(f"Resuming from existing output with {len(detailed)} entries", flush=True)
 
     remaining = []
     for pet in pets:
-        key = (pet.get("name", ""), pet.get("wikitext_title", ""))
+        key = (pet.get("name", ""), pet.get("link", ""))
         if key not in completed_keys:
             remaining.append(pet)
 
@@ -1089,9 +1109,14 @@ def cmd_pet_detail(args):
     for index, pet in enumerate(remaining, start=1):
         print(f"[{index}/{total}] downloading {pet.get('wikitext_title') or pet.get('name', '')}", flush=True)
         try:
-            detail = download_and_parse_pet_page(pet, html_dir)
+            cache_key = pet_page_key(pet)
+            detail = page_cache.get(cache_key)
+            if detail is None:
+                detail = download_and_parse_pet_page(pet, html_dir)
+                page_cache[cache_key] = detail
         except Exception as exc:
             detail = {"html_path": "", "skills": [], "error": str(exc)}
+            page_cache[pet_page_key(pet)] = detail
         detailed_pet = dict(pet)
         detailed_pet["html_path"] = detail["html_path"]
         detailed_pet["skills"] = detail["skills"]

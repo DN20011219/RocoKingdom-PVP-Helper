@@ -37,7 +37,8 @@ try {
 function createWindow() {
   const display = screen.getPrimaryDisplay()
   const workArea = display.workArea
-  const width = Math.max(320, Math.floor(workArea.width / 6))
+  // 将面板宽度调整为屏幕宽度的约 1/5，便于显示更宽的导入面板
+  const width = Math.max(360, Math.floor(workArea.width / 5))
   const height = workArea.height
   const x = workArea.x + workArea.width - width
   const y = workArea.y
@@ -61,7 +62,9 @@ function createWindow() {
   const isDev = process.env.ELECTRON_DEV === 'true' || process.env.NODE_ENV === 'development'
   if (isDev) {
     win.loadURL('http://localhost:5173')
-    win.webContents.openDevTools({ mode: 'detach' })
+    win.webContents.once('dom-ready', () => {
+      win.webContents.openDevTools({ mode: 'detach' })
+    })
   } else {
     const indexPath = path.join(__dirname, 'dist', 'index.html')
     win.loadFile(indexPath)

@@ -1,0 +1,9 @@
+{
+  "name": "rk-world-ocr",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix core/view run dev",
+    "start": "npm --prefix core/view run start",
+    "build:react": "npm --prefix core/view run build:react"
+  }
+}

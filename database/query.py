@@ -182,6 +182,35 @@ def compute_attr_bounds(name):
     return results
 
 
+def compute_base_attrs(name):
+    pets, _ = load_data()
+    found = find_pets(name, pets)
+    if not found:
+        return {}
+
+    p = found[0]
+    stats_map = p.get("qualification", {}).get("stats_map", {})
+
+    def to_int(value):
+        if value is None:
+            return 0
+        match = re.search(r"(-?\d+)", str(value))
+        return int(match.group(1)) if match else 0
+
+    base = {k: to_int(v) for k, v in stats_map.items()}
+
+    # 基础属性不考虑个体值和性格修正
+    hp = (1.7 * base.get("生命", 0) + 70) + 100
+    return {
+        "生命": math.floor(hp),
+        "物攻": math.floor((1.1 * base.get("物攻", 0) + 10) + 50),
+        "魔攻": math.floor((1.1 * base.get("魔攻", 0) + 10) + 50),
+        "物防": math.floor((1.1 * base.get("物防", 0) + 10) + 50),
+        "魔防": math.floor((1.1 * base.get("魔防", 0) + 10) + 50),
+        "速度": math.floor((1.1 * base.get("速度", 0) + 10) + 50),
+    }
+
+
 def pick_attr_variant(bounds, variant_key=None):
     if not bounds:
         return {}

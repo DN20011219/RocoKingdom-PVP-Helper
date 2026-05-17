@@ -1,6 +1,17 @@
-快速说明 — core/view 可视化前端
+# 快速说明 — core/view 可视化前端
 
-开发启动: 在 `core/view` 目录下执行一条命令即可:
+## 启动后端
+
+在根目录下进入 `database` 目录后启动：
+
+```
+cd database
+python -m uvicorn db_server:app --host 0.0.0.0 --port 8000 --workers 1
+```
+
+## 启动前端
+
+在 `core/view` 目录下执行一条命令即可:
 
 ```powershell
 cd core\view

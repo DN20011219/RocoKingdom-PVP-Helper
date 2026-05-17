@@ -1,5 +1,7 @@
 import { OverviewModule } from './builtin/OverviewModule'
 import { ExampleModule } from './builtin/ExampleModule'
+import { TeamImportModule } from './builtin/TeamImportModule'
+import { TeamListModule } from './builtin/TeamListModule'
 
 export const builtinModules = [
   {
@@ -17,6 +19,22 @@ export const builtinModules = [
     description: '一个占位示例，演示模块如何独立封装自己的内容。',
     kind: 'component',
     component: ExampleModule
+  },
+  {
+    id: 'team-import',
+    title: '导入队伍',
+    group: '队伍',
+    description: '导入队伍文本，并补录每个成员的六维属性。',
+    kind: 'component',
+    component: TeamImportModule
+  },
+  {
+    id: 'team-list',
+    title: '队伍列表',
+    group: '队伍',
+    description: '查看已经导入的队伍，并点击查看详细数据。',
+    kind: 'component',
+    component: TeamListModule
   }
 ]
 
